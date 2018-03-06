@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/influxdata/telegraf/testutil"
+	"github.com/stretchr/testify/require"
 )
 
 const sampleStatusResponse = `
@@ -22,7 +23,7 @@ const sampleStatusResponse = `
 				"name": "1.2.3.4:8180",
 				"status": "down",
 				"rise": 0,
-				"fall": 1471,
+				"fall": 3684,
 				"type": "http",
 				"port": 0
 			},
@@ -85,21 +86,29 @@ func TestNginxPlusGeneratesMetrics(t *testing.T) {
 
 	acc.AssertContainsTaggedFields(
 		t,
-		"nginx_upstream_check_peer",
+		"nginx_upstream_check",
 		map[string]interface{}{
-			"index":                  "0",
-			"upstream_name" 		  "upstreamcluster"
-			"upstream_server":        "1.2.3.4:8180",
-			"status":                 "down",
-			"rise":                   int64(0),
-			"fall":               	  int64(3630),
-			"type":          		  "http",
-			"port":          		  int64(0)),
+			"total":      int64(2),
+			"generation": 1,
 		},
 		map[string]string{
-			"server":           host,
-			"port":             port,
-			"total":         	2,
-			"generation":       "1",
+			"server": host,
+			"port":   port,
+		})
+
+	acc.AssertContainsTaggedFields(
+		t,
+		"nginx_upstream_check_peer",
+		map[string]interface{}{
+			"status": "down",
+			"rise":   int64(0),
+			"fall":   int64(3684),
+			"type":   "http",
+			"port":   int64(0),
+		},
+		map[string]string{
+			"upstream_name":   "upstreamcluster",
+			"upstream_server": "1.2.3.4:8180",
+			"index":           "0",
 		})
 }
